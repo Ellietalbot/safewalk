@@ -267,14 +267,14 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
   }
 
   function loadMaps(){
-    if(!MAPS_KEY || MAPS_KEY === 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ'){
+    if(!MAPS_KEY || MAPS_KEY === 'PASTE_KEY_HERE'){
       mapError('Add your Google Maps key: open this file and paste it into <code>MAPS_KEY</code> at the top of the script.');
       return;
     }
     window.gm_authFailure = () => mapError('Google rejected the API key. Check that it is pasted correctly and allowed on this website.');
     window.__swInitMap = initMap;
     const s = document.createElement('script');
-    s.src = 'https://maps.googleapis.com/maps/api/js?key='+encodeURIComponent(AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ)+'&v=weekly&loading=async&callback=__swInitMap';
+    s.src = 'https://maps.googleapis.com/maps/api/js?key='+encodeURIComponent(MAPS_KEY)+'&v=weekly&loading=async&callback=__swInitMap';
     s.async = true;
     s.onerror = () => mapError('Google Maps could not load. Check your internet connection.');
     document.head.appendChild(s);
