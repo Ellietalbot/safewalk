@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SafeWalk</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+<style>
+/* Layout: phone frame centered on desktop, full screen on a real phone. SafeWalk card floats over the widgets home; the live Google map lives inside the card. */
+:root{
+  color-scheme: light;
+  --page:#e9eef5;
+  --sky-top:#cfe0f3; --sky-bot:#9cc0e6;
+  --tile-a:#5aa2ea; --tile-b:#2b72c7;
+  --blue:#0a5fb4; --blue-ink:#1468bf; --blue-press:#084c90;
+  --red:#e8101c; --red-press:#bf0b15;
+  --ink:#1b1f24; --muted:#6b7480; --line:#d5dbe3; --card:#ffffff;
+  --call-bg:#2a2826; --call-btn:#4a4744; --call-green:#1fc14a;
+  --font: "Roboto", -apple-system, "Segoe UI", system-ui, sans-serif;
+}
+html,body{height:100%;margin:0}
+body{background:var(--page);color:var(--ink);font-family:var(--font);font-size:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;box-sizing:border-box}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.note{font-size:12px;color:var(--muted);text-align:center}
+
+.phone{position:relative;width:390px;max-width:100%;height:min(820px,calc(100% - 30px));min-height:640px;border-radius:40px;overflow:hidden;background:linear-gradient(180deg,var(--sky-top),var(--sky-bot));box-shadow:0 0 0 10px #15181d,0 24px 60px rgba(20,40,80,.35)}
+.statusbar{position:absolute;top:0;left:0;right:0;height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-size:15px;font-weight:500;z-index:30;pointer-events:none;color:var(--ink)}
+.statusbar.dark{color:#fff}
+.statusbar .sig{display:flex;gap:6px;align-items:center}
+.batt{border:1.5px solid currentColor;border-radius:4px;font-size:10px;padding:0 3px;font-weight:700;line-height:13px}
+.screen{position:absolute;inset:0}
+@media (max-width:480px){
+  body{padding:0;gap:0}
+  .phone{width:100%;height:100%;min-height:0;border-radius:0;box-shadow:none}
+  .note,.statusbar,.homebar{display:none}
+  .screen{top:env(safe-area-inset-top,0px)}
+}
+
+/* Home */
+.topbar{position:absolute;top:44px;left:0;right:0;display:flex;align-items:center;gap:18px;padding:10px 20px}
+@media (max-width:480px){.topbar{top:4px}.wtitle{top:58px!important}.tiles.top{top:104px!important}.card{top:150px!important}}
+.topbar .sp{flex:1}
+.ico{width:24px;height:24px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bell{position:relative}
+.badge{position:absolute;top:-9px;left:6px;background:#e5482b;color:#fff;font-size:9px;font-weight:700;border-radius:9px;padding:1px 4px}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#c9a27d,#7a5236);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;border:2px solid #fff}
+.wtitle{position:absolute;top:100px;left:20px;right:20px;display:flex;justify-content:space-between;align-items:center}
+.wtitle h1{margin:0;font-size:24px;font-weight:700}
+.findnew{background:var(--blue);color:#fff;border:0;border-radius:4px;font-size:12px;font-weight:700;padding:4px 10px}
+.tiles{position:absolute;left:20px;right:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.tiles.top{top:148px}
+.tiles.bottom{bottom:30px}
+.tile{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;font-weight:700;white-space:nowrap}
+.tile .sq{width:76px;height:76px;border-radius:18px;background:linear-gradient(180deg,var(--tile-a),var(--tile-b));display:grid;place-items:center;box-shadow:inset 0 -3px 0 rgba(0,0,0,.12)}
+.tile .sq svg{width:44px;height:44px;stroke:#fff;fill:none;stroke-width:2}
+.fab{position:absolute;right:22px;bottom:34px;width:54px;height:54px;border-radius:50%;background:var(--blue);display:grid;place-items:center;box-shadow:0 6px 16px rgba(10,60,120,.35);border:0}
+.fab svg{width:28px;height:28px;stroke:#fff;fill:none;stroke-width:2.2}
+
+/* Card */
+.card{position:absolute;top:196px;left:50%;transform:translateX(-50%);width:min(380px,calc(100% - 10px));height:492px;max-height:calc(100% - 206px);background:var(--card);border-radius:10px;box-shadow:0 8px 30px rgba(20,50,90,.22);display:flex;flex-direction:column;z-index:5}
+.card-head{display:flex;justify-content:space-between;align-items:center;padding:16px 14px 6px}
+.card-head h2{margin:0;font-size:18px;font-weight:700}
+.dots{color:var(--muted);letter-spacing:2px;font-weight:700}
+.card-body{flex:1;overflow:auto;padding:6px 14px 10px;min-height:0}
+.card-body.mbody{overflow:hidden;padding-bottom:0;display:flex;flex-direction:column}
+.card-foot{border-top:1px solid var(--line);padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px}
+.card-foot.row{flex-direction:row}
+.card-foot.row .btn{flex:1}
+.btn{border-radius:6px;font-size:13px;font-weight:700;padding:10px 12px;border:1.5px solid transparent}
+.btn.primary{background:var(--blue);color:#fff}
+.btn.primary:active{background:var(--blue-press)}
+.btn.primary:disabled{background:#9db8d6;cursor:not-allowed}
+.btn.outline{background:#fff;color:var(--ink);border-color:var(--ink)}
+.btn.glow{box-shadow:0 0 0 4px rgba(10,95,180,.25)}
+h3{color:var(--blue-ink);font-size:14px;font-weight:700;margin:8px 0 6px}
+.lbl{font-size:14px;font-weight:700;color:#3a3f46;margin:18px 0 10px}
+ol{margin:0;padding-left:18px;font-size:12px;color:var(--muted);line-height:1.55}
+.field{width:100%;border:1px solid #9aa3ad;border-radius:8px;padding:12px;font:inherit;font-size:15px;color:var(--ink)}
+.help{font-size:10.5px;color:var(--muted);margin-top:6px}
+.center{display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:22px;gap:6px}
+.bigcheck{width:84px;height:84px;stroke:var(--blue-ink);fill:none;stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}
+.bigcheck .tick{stroke-dasharray:60;stroke-dashoffset:60;animation:draw .5s .15s ease-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.center h3{margin:14px 0 0}
+.center p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5;max-width:28ch}
+
+/* Map */
+.mapwrap{border-radius:4px;overflow:hidden;display:flex;flex-direction:column;flex:1;min-height:0}
+.mapbar{background:var(--blue);color:#fff;font-size:12px;padding:7px 8px}
+.searchrow{position:relative;background:var(--blue);padding:0 6px 6px}
+.search{width:100%;border:0;border-radius:4px;padding:8px 10px;font:inherit;font-size:13px;color:var(--ink);background:#fff}
+.results{position:absolute;left:6px;right:6px;top:100%;background:#fff;border-radius:0 0 6px 6px;box-shadow:0 8px 20px rgba(0,0,0,.25);z-index:20;max-height:220px;overflow:auto}
+.results button{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:8px 10px;font-size:12.5px;color:var(--ink)}
+.results button span{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.results button:hover{background:#eef3fa}
+.results .msg{padding:10px;font-size:12px;color:var(--muted)}
+.mapstage{position:relative;flex:1;min-height:0;background:#dfe6ee}
+#mapslot{position:absolute;inset:0}
+#mapHost{width:100%;height:100%}
+.maperr{height:100%;display:grid;place-items:center;text-align:center;padding:20px;font-size:12.5px;color:#3a3f46;line-height:1.5}
+.maperr code{background:#fff;padding:1px 4px;border-radius:3px}
+.dest{background:#eef3fa;font-size:11.5px;padding:7px 8px;color:var(--ink);min-height:44px}
+.dest b{font-weight:700}
+.dest .sub{color:var(--muted)}
+.callbar{position:absolute;top:8px;left:8px;right:8px;background:var(--red);color:#fff;border:0;border-radius:4px;font-size:12px;font-weight:700;padding:8px;box-shadow:0 2px 8px rgba(0,0,0,.3);z-index:4}
+.callbar:active{background:var(--red-press)}
+.chip{position:absolute;top:46px;right:8px;z-index:4;border:0;border-radius:14px;background:#fff;color:var(--ink);font-size:11px;font-weight:500;padding:5px 10px;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.chip.on{background:var(--blue);color:#fff}
+.tip{position:absolute;left:8px;right:8px;bottom:8px;z-index:4;background:rgba(10,95,180,.95);color:#fff;border-radius:6px;padding:10px 12px;display:flex;gap:12px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.35);transform:translateY(130%);opacity:0;transition:transform .35s ease,opacity .35s ease;pointer-events:none}
+.tip.show{transform:none;opacity:1}
+.tipi{flex:none;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center}
+.tipi svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tipt{min-width:0;font-size:11px;line-height:1.35}
+.tipt b{display:block;font-size:12px;font-weight:700}
+.medot{width:18px;height:18px;border-radius:50%;background:#3b8cff;border:3px solid #fff;box-shadow:0 0 0 0 rgba(59,140,255,.5),0 1px 4px rgba(0,0,0,.4);animation:ring 2s infinite;transform:translateY(50%)}
+@keyframes ring{70%{box-shadow:0 0 0 14px rgba(59,140,255,0),0 1px 4px rgba(0,0,0,.4)}100%{box-shadow:0 0 0 0 rgba(59,140,255,0),0 1px 4px rgba(0,0,0,.4)}}
+
+/* Toast */
+.toast{position:absolute;top:48px;left:10px;right:10px;background:rgba(245,245,247,.97);border-radius:16px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.2);display:flex;gap:10px;z-index:40;transform:translateY(-160%);transition:transform .35s ease}
+@media (max-width:480px){.toast{top:calc(env(safe-area-inset-top,0px) + 8px)}}
+.toast.show{transform:none}
+.toast .appi{flex:none;width:34px;height:34px;border-radius:8px;background:#30c94e;display:grid;place-items:center}
+.toast .appi svg{width:20px;height:20px;fill:#fff}
+.toast .t1{font-size:12px;font-weight:700;display:flex;justify-content:space-between}
+.toast .t1 span{font-weight:400;color:var(--muted)}
+.toast .t2{font-size:12px;color:#333;margin-top:2px;line-height:1.35}
+
+/* Dialer */
+.dialer{background:#fff;display:flex;flex-direction:column;align-items:center;z-index:20}
+.dnum{margin-top:110px;height:56px;font-size:40px;letter-spacing:1px}
+.pad{display:grid;grid-template-columns:repeat(3,76px);gap:16px 24px;margin-top:26px}
+.key{width:76px;height:76px;border-radius:50%;border:0;background:#e5e5e7;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#000}
+.key:active{background:#c8c8cc}
+.key .n{font-size:32px;line-height:1}
+.key .l{font-size:9px;letter-spacing:2px;font-weight:700;height:10px}
+.callrow{display:grid;grid-template-columns:repeat(3,76px);gap:24px;margin-top:16px;align-items:center}
+.green{width:76px;height:76px;border-radius:50%;border:0;background:var(--call-green);display:grid;place-items:center;grid-column:2}
+.green svg,.redbtn svg{width:34px;height:34px;fill:#fff}
+.del{border:0;background:none;color:#555;font-size:13px;justify-self:center}
+.back{position:absolute;top:56px;left:20px;border:0;background:none;color:#0a84ff;font-size:15px}
+.tabbar{position:absolute;bottom:22px;left:0;right:0;display:flex;justify-content:space-around;padding:0 24px;font-size:10px;color:#8e8e93}
+.tabbar div{display:flex;flex-direction:column;align-items:center;gap:3px}
+.tabbar svg{width:22px;height:22px;fill:currentColor}
+.tabbar .on{color:#0a84ff}
+.homebar{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:130px;height:5px;border-radius:3px;background:#111;border:0;padding:0}
+
+/* Call */
+.call{background:radial-gradient(120% 70% at 50% 0%,#4a4643,var(--call-bg));color:#fff;display:flex;flex-direction:column;align-items:center;z-index:20}
+.cnum{margin-top:110px;font-size:40px}
+.cstat{font-size:18px;color:#d6d3d0;margin-top:4px;font-variant-numeric:tabular-nums}
+.cgrid{display:grid;grid-template-columns:repeat(3,76px);gap:22px 30px;margin-top:110px}
+.cbtn{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:13px;background:none;border:0;color:#fff;padding:0}
+.cbtn .c{width:72px;height:72px;border-radius:50%;background:var(--call-btn);display:grid;place-items:center}
+.cbtn.on .c{background:#fff}
+.cbtn.on .c svg{stroke:#222}
+.cbtn svg{width:30px;height:30px;stroke:#fff;fill:none;stroke-width:2}
+.cbtn.dim{color:#8a8683}
+.cbtn.dim svg{stroke:#8a8683}
+.redbtn{width:72px;height:72px;border-radius:50%;border:0;background:#f2252c;display:grid;place-items:center;margin:60px 0 0}
+.redbtn svg{transform:rotate(135deg)}
+.proto{position:absolute;bottom:26px;font-size:10px;color:#9a9692}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.bigcheck .tick{stroke-dashoffset:0}}
+</style>
+</head>
+<body>
+<div class="phone" id="device">
+  <div class="statusbar" id="sb"><span id="clock">1:59</span><span class="sig">
+    <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1" opacity=".35"/></svg>
+    <span class="batt">83</span></span></div>
+
+  <section class="screen" id="home">
+    <div class="topbar">
+      <svg class="ico" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      <svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <span class="sp"></span>
+      <span class="bell"><svg class="ico" viewBox="0 0 24 24" style="fill:var(--ink)"><path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15L6 17zM10 21h4"/></svg><span class="badge">171</span></span>
+      <svg class="ico" viewBox="0 0 24 24" style="fill:var(--ink)"><path d="M3 4h13v9H8l-5 4V4zM18 8h3v12l-4-3h-7v-2"/></svg>
+      <span class="avatar">EP</span>
+    </div>
+    <div class="wtitle"><h1>widgets</h1><button class="findnew" type="button">Find New</button></div>
+    <div class="tiles top">
+      <div class="tile"><div class="sq"><svg viewBox="0 0 44 44"><circle cx="18" cy="15" r="7"/><path d="M5 38c1-8 6-12 13-12s12 4 13 12"/></svg></div></div>
+      <div class="tile"><div class="sq"><svg viewBox="0 0 44 44"><rect x="8" y="7" width="28" height="30" rx="3"/><path d="M14 15h16M14 21h16M14 27h9"/></svg></div></div>
+      <div class="tile"><div class="sq"><svg viewBox="0 0 44 44"><rect x="6" y="9" width="32" height="26" rx="3"/><path d="M14 22h12v8H14zM26 25l6-3v8l-6-3"/></svg></div></div>
+    </div>
+    <div class="tiles bottom">
+      <div class="tile"><div class="sq"><svg viewBox="0 0 44 44"><rect x="6" y="11" width="32" height="22" rx="2"/><path d="m6 12 16 12 16-12"/></svg></div>Email and Files (…</div>
+      <div class="tile"><div class="sq"><svg viewBox="0 0 44 44"><rect x="9" y="7" width="26" height="30" rx="3"/><path d="M14 14h16M14 30l3-8 3 8M15 27h4M24 26h6M27 23v6"/></svg></div>Grade Report</div>
+      <div class="tile"><div class="sq"><svg viewBox="0 0 44 44"><path d="M10 34 22 12M14 12a6 6 0 1 0 12 0 6 6 0 1 0-12 0M30 22v10M30 32a3 3 0 1 1-3-3"/></svg></div>Campus Life</div>
+    </div>
+    <button class="fab" type="button" aria-label="Assistant"><svg viewBox="0 0 28 28"><rect x="5" y="9" width="18" height="13" rx="3"/><path d="M14 9V5M10 15v2M18 15v2M2 14v4M26 14v4"/></svg></button>
+    <div class="card" id="card"></div>
+  </section>
+
+  <section class="screen dialer" id="dialer" hidden>
+    <button class="back" type="button" data-action="dialer-home">‹ SafeWalk</button>
+    <div class="dnum" id="dnum">911</div>
+    <div class="pad" id="pad"></div>
+    <div class="callrow">
+      <span></span>
+      <button class="green" type="button" data-action="place-call" aria-label="Call"><svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg></button>
+      <button class="del" type="button" data-action="del" id="delbtn">Delete</button>
+    </div>
+    <div class="tabbar">
+      <div><svg viewBox="0 0 24 24"><path d="m12 2 3 7 7 .6-5.3 4.7L18.4 22 12 18l-6.4 4 1.7-7.7L2 9.6 9 9z"/></svg>Favorites</div>
+      <div><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>Recents</div>
+      <div><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>Contacts</div>
+      <div class="on"><svg viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="6" cy="11" r="2"/><circle cx="12" cy="11" r="2"/><circle cx="18" cy="11" r="2"/><circle cx="6" cy="17" r="2"/><circle cx="12" cy="17" r="2"/><circle cx="18" cy="17" r="2"/></svg>Keypad</div>
+      <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="12" r="4"/><circle cx="18" cy="12" r="4"/><path d="M6 16h12"/></svg>Voicemail</div>
+    </div>
+  </section>
+
+  <section class="screen call" id="call" hidden>
+    <div class="cnum">911</div>
+    <div class="cstat" id="cstat">calling mobile…</div>
+    <div class="cgrid">
+      <button class="cbtn" type="button" data-action="toggle"><span class="c"><svg viewBox="0 0 30 30"><rect x="11" y="4" width="8" height="14" rx="4"/><path d="M7 14a8 8 0 0 0 16 0M15 22v4M5 4l20 22"/></svg></span>mute</button>
+      <button class="cbtn" type="button" data-action="toggle"><span class="c"><svg viewBox="0 0 30 30"><path d="M8 8h.01M15 8h.01M22 8h.01M8 15h.01M15 15h.01M22 15h.01M8 22h.01M15 22h.01M22 22h.01" stroke-width="5" stroke-linecap="round"/></svg></span>keypad</button>
+      <button class="cbtn" type="button" data-action="toggle"><span class="c"><svg viewBox="0 0 30 30"><path d="M4 11h5l7-6v20l-7-6H4zM20 10a6 6 0 0 1 0 10M23 6a11 11 0 0 1 0 18"/></svg></span>audio</button>
+      <button class="cbtn dim" type="button" disabled><span class="c"><svg viewBox="0 0 30 30"><path d="M15 6v18M6 15h18"/></svg></span>add call</button>
+      <button class="cbtn dim" type="button" disabled><span class="c"><svg viewBox="0 0 30 30"><rect x="3" y="9" width="17" height="13" rx="3"/><path d="m21 13 6-4v13l-6-4z"/></svg></span>FaceTime</button>
+      <button class="cbtn" type="button" data-action="toggle"><span class="c"><svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="11"/><circle cx="15" cy="12" r="4"/><path d="M8 23c2-3 4-4 7-4s5 1 7 4"/></svg></span>contacts</button>
+    </div>
+    <button class="redbtn" type="button" data-action="end-call" aria-label="End call"><svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg></button>
+    <div class="proto">Simulated call. Nothing is dialed.</div>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <div class="appi"><svg viewBox="0 0 24 24"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.4 1.3 4.6 3.4 6L4.5 21l4.2-2.3c1 .2 2.1.3 3.3.3 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/></svg></div>
+    <div style="flex:1;min-width:0"><div class="t1">BYU-I Security <span>now</span></div><div class="t2" id="toastText"></div></div>
+  </div>
+</div>
+<div class="note">Prototype. The map and your location are real; texts and 911 calls are simulated.</div>
+
+<script>
+/* =========================================================
+   PASTE YOUR GOOGLE MAPS KEY BETWEEN THE QUOTES BELOW
+   (a Maps Demo Key works)
+   ========================================================= */
+const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
+
+(function(){
+  const CAMPUS = {lat:43.8187, lng:-111.7837};   // BYU-Idaho, Rexburg
+  const ARRIVE_M = 25;          // counts as arrived within this many meters
+  const STOP_MS = 5*60*1000;    // "stopped for 5 minutes" check-in
+  const $ = id => document.getElementById(id);
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  const S = { step:'intro', phone:'208-555-0142', dest:null, route:null, me:{...CAMPUS},
+              gps:'waiting', sim:false, simP:0, simT:0, fired:{}, tip:null, active:false,
+              arrived:false, lastMovePos:null, lastMoveAt:0, mapErr:'' };
+  try { S.phone = localStorage.getItem('sw_phone') || S.phone; } catch(e){}
+
+  // ---------- the live map (one instance, moved between screens) ----------
+  const mapHost = document.createElement('div'); mapHost.id = 'mapHost';
+  let lastDrag=0;
+  let G=null, map=null, meMarker=null, destMarker=null, routeLine=null, routeToken=0;
+
+  function mapError(msg){
+    S.mapErr = msg;
+    mapHost.innerHTML = '<div class="maperr"><div>'+msg+'</div></div>';
+    refreshDestUI();
+  }
+
+  function loadMaps(){
+    if(!MAPS_KEY || MAPS_KEY === 'PASTE_KEY_HERE'){
+      mapError('Add your Google Maps key: open this file and paste it into <code>MAPS_KEY</code> at the top of the script.');
+      return;
+    }
+    window.gm_authFailure = () => mapError('Google rejected the API key. Check that it is pasted correctly and allowed on this website.');
+    window.__swInitMap = initMap;
+    const s = document.createElement('script');
+    s.src = 'https://maps.googleapis.com/maps/api/js?key='+encodeURIComponent(MAPS_KEY)+'&v=weekly&loading=async&callback=__swInitMap';
+    s.async = true;
+    s.onerror = () => mapError('Google Maps could not load. Check your internet connection.');
+    document.head.appendChild(s);
+  }
+
+  async function initMap(){
+    try{
+      const {Map, Polyline} = await google.maps.importLibrary('maps');
+      const {AdvancedMarkerElement, PinElement} = await google.maps.importLibrary('marker');
+      const {Place} = await google.maps.importLibrary('places');
+      G = {Map, Polyline, AdvancedMarkerElement, PinElement, Place};
+      map = new Map(mapHost, { center:S.me, zoom:17, mapId:'DEMO_MAP_ID', disableDefaultUI:true,
+                               zoomControl:true, gestureHandling:'greedy', clickableIcons:true });
+      const dot = document.createElement('div'); dot.className='medot';
+      meMarker = new AdvancedMarkerElement({ map, position:S.me, content:dot, zIndex:10, title:'You' });
+      map.addListener('click', onMapClick);
+      map.addListener('dragstart', () => { lastDrag = Date.now(); });
+      refreshDestUI();
+      if(S.dest){ placeDestMarker(); computeRoute(); }
+    }catch(e){ mapError('Google Maps loaded but failed to start: '+esc(e.message||e)); }
+  }
+
+  // ---------- location ----------
+  function startGPS(){
+    if(!('geolocation' in navigator)){ S.gps='off'; S.sim=true; return; }
+    navigator.geolocation.watchPosition(p => {
+      const first = S.gps !== 'on';
+      S.gps = 'on';
+      if(!S.sim) setMe({lat:p.coords.latitude, lng:p.coords.longitude});
+      if(first && map && !S.dest) map.panTo(S.me);
+      updateChip();
+    }, () => { S.gps='off'; S.sim=true; updateChip(); refreshDestUI(); },
+    { enableHighAccuracy:true, maximumAge:3000, timeout:20000 });
+  }
+
+  function setMe(pos){
+    S.me = pos;
+    if(meMarker) meMarker.position = pos;
+    if(!S.active) return;
+    if(map && S.step==='walking' && Date.now()-lastDrag > 10000) map.panTo(pos);
+    if(!S.lastMovePos || dist(pos, S.lastMovePos) > 10){ S.lastMovePos = pos; S.lastMoveAt = Date.now(); S.stopWarned=false; }
+    if(S.dest && !S.arrived && dist(pos, S.dest) <= ARRIVE_M){
+      S.arrived = true; setTip('here'); const b=$('arrivedBtn'); if(b) b.classList.add('glow');
+    }
+  }
+
+  function dist(a,b){
+    const R=6371000, toR=Math.PI/180;
+    const dLat=(b.lat-a.lat)*toR, dLng=(b.lng-a.lng)*toR;
+    const h=Math.sin(dLat/2)**2+Math.cos(a.lat*toR)*Math.cos(b.lat*toR)*Math.sin(dLng/2)**2;
+    return 2*R*Math.asin(Math.sqrt(h));
+  }
+
+  // ---------- destination ----------
+  async function onMapClick(e){
+    if(S.step !== 'map') return;
+    if(e.placeId){
+      e.stop();
+      try{
+        const pl = new G.Place({id:e.placeId});
+        await pl.fetchFields({fields:['displayName','location']});
+        setDest(pl.displayName, pl.location.lat(), pl.location.lng());
+        return;
+      }catch(err){}
+    }
+    setDest('Dropped pin', e.latLng.lat(), e.latLng.lng());
+  }
+
+  function setDest(name, lat, lng){
+    S.dest = {name, lat, lng};
+    placeDestMarker();
+    computeRoute();
+    refreshDestUI();
+  }
+
+  function placeDestMarker(){
+    if(!G) return;
+    if(!destMarker){
+      const pin = new G.PinElement({background:'#e8101c', borderColor:'#ffffff', glyphColor:'#ffffff'});
+      destMarker = new G.AdvancedMarkerElement({map, content:pin.element, zIndex:5});
+    }
+    destMarker.map = map;
+    destMarker.position = {lat:S.dest.lat, lng:S.dest.lng};
+  }
+
+  function clearDest(){
+    S.dest=null; S.route=null;
+    if(destMarker) destMarker.map=null;
+    if(routeLine) routeLine.setMap(null);
+  }
+
+  async function computeRoute(){
+    if(!S.dest) return;
+    const tok = ++routeToken, o = {...S.me}, d = {lat:S.dest.lat, lng:S.dest.lng};
+    S.route = null; refreshDestUI();
+    let r;
+    try{
+      const res = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':MAPS_KEY,
+                 'X-Goog-FieldMask':'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline'},
+        body: JSON.stringify({
+          origin:{location:{latLng:{latitude:o.lat, longitude:o.lng}}},
+          destination:{location:{latLng:{latitude:d.lat, longitude:d.lng}}},
+          travelMode:'WALK'
+        })
+      });
+      const j = await res.json();
+      const rt = j.routes && j.routes[0];
+      if(!rt) throw new Error((j.error && j.error.message) || 'No walking route found');
+      r = { pts:decodePolyline(rt.polyline.encodedPolyline), m:rt.distanceMeters||0, s:parseInt(rt.duration,10)||0 };
+    }catch(err){
+      const m = dist(o,d);
+      r = { pts:[o,d], m:Math.round(m), s:Math.round(m/1.4), straight:true };
+    }
+    if(tok !== routeToken) return;
+    S.route = r;
+    drawRoute(); refreshDestUI();
+  }
+
+  function drawRoute(){
+    if(!G || !S.route) return;
+    if(routeLine) routeLine.setMap(null);
+    routeLine = new G.Polyline({ map, path:S.route.pts, strokeColor:'#1f6fe0', strokeOpacity:.9, strokeWeight:5 });
+    fitRoute();
+  }
+
+  function fitRoute(){
+    if(!map || !S.route) return;
+    const b = new google.maps.LatLngBounds();
+    S.route.pts.forEach(p => b.extend(p)); b.extend(S.me);
+    map.fitBounds(b, {top:60, bottom:90, left:30, right:30});
+  }
+
+  function decodePolyline(str){
+    let i=0, lat=0, lng=0; const out=[];
+    while(i < str.length){
+      let b, shift=0, res=0;
+      do{ b=str.charCodeAt(i++)-63; res|=(b&31)<<shift; shift+=5; }while(b>=32);
+      lat += (res&1) ? ~(res>>1) : (res>>1);
+      shift=0; res=0;
+      do{ b=str.charCodeAt(i++)-63; res|=(b&31)<<shift; shift+=5; }while(b>=32);
+      lng += (res&1) ? ~(res>>1) : (res>>1);
+      out.push({lat:lat/1e5, lng:lng/1e5});
+    }
+    return out;
+  }
+
+  function pointAlong(pts, f){
+    if(pts.length < 2) return pts[0];
+    const seg=[]; let tot=0;
+    for(let i=1;i<pts.length;i++){ const l=dist(pts[i-1],pts[i]); seg.push(l); tot+=l; }
+    let want = Math.max(0,Math.min(1,f))*tot;
+    for(let i=1;i<pts.length;i++){
+      if(want <= seg[i-1] || i === pts.length-1){
+        const k = seg[i-1] ? Math.min(1, want/seg[i-1]) : 1;
+        return {lat:pts[i-1].lat+(pts[i].lat-pts[i-1].lat)*k, lng:pts[i-1].lng+(pts[i].lng-pts[i-1].lng)*k};
+      }
+      want -= seg[i-1];
+    }
+  }
+
+  function routeText(){
+    if(!S.route) return 'Finding a walking route…';
+    const m=S.route.m, min=Math.max(1,Math.round(S.route.s/60));
+    const d = m>=1000 ? (m/1609.34).toFixed(1)+' mi' : Math.round(m)+' m';
+    return d+' · about '+min+' min walk'+(S.route.straight?' (straight line)':'');
+  }
+
+  // ---------- search ----------
+  let searchT=null, lastResults=[];
+  async function searchPlaces(q){
+    const box = $('results'); if(!box) return;
+    if(!G){ box.hidden=false; box.innerHTML='<div class="msg">The map is still loading.</div>'; return; }
+    box.hidden=false; box.innerHTML='<div class="msg">Searching…</div>';
+    try{
+      const {places} = await G.Place.searchByText({
+        textQuery:q, fields:['displayName','location','formattedAddress'],
+        locationBias:{center:CAMPUS, radius:3000}, maxResultCount:5
+      });
+      lastResults = places || [];
+      if($('q') && $('q').value.trim() !== q) return;
+      box.innerHTML = lastResults.length
+        ? lastResults.map((p,i)=>'<button type="button" data-action="pick" data-i="'+i+'">'+esc(p.displayName)+'<span>'+esc(p.formattedAddress||'')+'</span></button>').join('')
+        : '<div class="msg">No places found. Try a building name, or tap the map.</div>';
+    }catch(e){
+      box.innerHTML='<div class="msg">Search is unavailable right now. Tap the map to drop a pin instead.</div>';
+    }
+  }
+
+  // ---------- tips & timeline ----------
+  const ICONS={
+    ask:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5V14M12 17.5v.01"/></svg>',
+    bell:'<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="12" rx="2"/><path d="M8 21l3-4M8 9h8M8 13h5"/></svg>',
+    walk:'<svg viewBox="0 0 24 24"><circle cx="13" cy="4" r="1.8"/><path d="M12 7 9 14l4 3v4M12 7l4 4h3M9 14l-3 7M10 9l-4 3"/></svg>',
+    phone:'<svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/></svg>',
+    eye:'<svg viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+    pin:'<svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>'
+  };
+  const TIPS={
+    ask:{i:'ask',t:'Are you sure you’d like to begin this SafeWalk session?'},
+    notif:{i:'bell',t:'Check your notifications',s:'You’ll receive a text soon notifying you security has your location.'},
+    start:{i:'walk',t:'Start walking.',s:'If you stop for more than 5 minutes, you’ll get a call.'},
+    running:{i:'phone',t:'Keep SafeWalk running',s:'You can lock your phone or use other apps.'},
+    aware:{i:'eye',t:'Stay aware of your surroundings.',s:'Avoid looking down at your phone for long periods.'},
+    here:{i:'pin',t:'You’ve reached your destination.',s:'Tap “I’ve Arrived Safely” to end your SafeWalk.'},
+    stopped:{i:'phone',t:'You’ve stopped for 5 minutes.',s:'Campus Security will call you to check in.'}
+  };
+  const SIM_START=6, SIM_DUR=40;
+  const EVENTS=[
+    {at:0,   fn:()=>setTip('notif')},
+    {at:2.5, fn:()=>toast('You’ve started a SafeWalk. BYU-Idaho Security can now see your location until you arrive.')},
+    {at:4.5, fn:()=>setTip(null)},
+    {at:5.5, fn:()=>setTip('start')},
+    {at:10,  fn:()=>setTip(null)},
+    {at:14,  fn:()=>setTip('running')},
+    {at:18.5,fn:()=>setTip(null)},
+    {at:22,  fn:()=>setTip('aware')},
+    {at:26.5,fn:()=>{ if(S.tip==='aware') setTip(null); }}
+  ];
+  function setTip(k){ S.tip=k; drawTip(); }
+  function drawTip(){
+    const el=$('tip'); if(!el) return;
+    const t=S.tip && TIPS[S.tip];
+    if(!t){ el.classList.remove('show'); return; }
+    el.innerHTML='<span class="tipi">'+ICONS[t.i]+'</span><span class="tipt"><b>'+t.t+'</b>'+(t.s?'<span>'+t.s+'</span>':'')+'</span>';
+    el.classList.add('show');
+  }
+  function updateChip(){
+    const c=$('simchip'); if(!c) return;
+    c.textContent = S.sim ? (S.gps==='on' ? 'Demo walk: on' : 'Demo walk (no GPS)') : 'Live GPS · tap for demo walk';
+    c.classList.toggle('on', S.sim);
+  }
+
+  setInterval(()=>{
+    if(!S.active || S.step!=='walking' || $('home').hidden) return;
+    S.simT += 0.1;
+    EVENTS.forEach((ev,i)=>{ if(!S.fired[i] && S.simT>=ev.at){ S.fired[i]=1; ev.fn(); } });
+    if(S.sim && S.route && S.simT>=SIM_START && !S.arrived){
+      S.simP = Math.min(1, S.simP + 0.1/SIM_DUR);
+      setMe(pointAlong(S.route.pts, S.simP));
+    }
+    if(!S.sim && !S.arrived && !S.stopWarned && S.lastMoveAt && Date.now()-S.lastMoveAt > STOP_MS){
+      S.stopWarned = true; setTip('stopped');
+    }
+  },100);
+
+  // ---------- views ----------
+  const head = () => '<div class="card-head"><h2>Safewalk</h2><span class="dots">···</span></div>';
+  const CHECK = '<svg class="bigcheck" viewBox="0 0 84 84"><circle cx="42" cy="42" r="38"/><path class="tick" d="m26 43 11 11 22-24"/></svg>';
+  const views = {
+    intro: () => head()+'<div class="card-body">'+
+      '<h3>How to Use SafeWalk</h3><ol>'+
+      '<li>Verify your phone number.</li><li>Choose your destination on the map.</li><li>Start your SafeWalk.</li>'+
+      '<li>When you arrive, tap “I’ve Arrived” to end your SafeWalk and stop location sharing.</li></ol>'+
+      '<div class="lbl"><label for="phoneInput">Confirm your phone number</label></div>'+
+      '<input class="field" id="phoneInput" type="tel" placeholder="123-456-7890" value="'+esc(S.phone)+'">'+
+      '<div class="help">Campus Security will use this number to contact you if needed.</div>'+
+      '</div><div class="card-foot">'+
+      '<button class="btn primary" type="button" data-action="start">Get Started</button>'+
+      '<button class="btn outline" type="button" data-action="request">Request a Physical SafeWalk</button></div>',
+    request: () => head()+'<div class="card-body"><div class="center">'+CHECK+
+      '<h3>Escort Requested</h3><p>A Campus Security officer will call you at '+esc(S.phone)+' to arrange a meeting spot.</p></div></div>'+
+      '<div class="card-foot"><button class="btn primary" type="button" data-action="go-intro">Ok</button></div>',
+    map: () => head()+'<div class="card-body mbody"><div class="mapwrap">'+
+      '<div class="mapbar">Please Select Your Destination</div>'+
+      '<div class="searchrow"><input class="search" id="q" type="search" autocomplete="off" placeholder="Search a building, like Manwaring Center"><div class="results" id="results" hidden></div></div>'+
+      '<div class="mapstage"><div id="mapslot"></div></div>'+
+      '<div class="dest" id="destline"></div></div></div>'+
+      '<div class="card-foot"><button class="btn primary" type="button" id="confirmBtn" data-action="confirm-dest" disabled>Confirm Destination</button></div>',
+    ready: () => sessionView(
+      '<button class="btn outline" type="button" data-action="back-map">Cancel</button>'+
+      '<button class="btn primary" type="button" data-action="begin">Begin SafeWalk</button>'),
+    walking: () => sessionView(
+      '<button class="btn outline" type="button" data-action="cancel-session">Cancel</button>'+
+      '<button class="btn primary'+(S.arrived?' glow':'')+'" type="button" id="arrivedBtn" data-action="arrived">I’ve Arrived Safely</button>'),
+    ended: () => head()+'<div class="card-body"><div class="center">'+CHECK+
+      '<h3>SafeWalk Ended</h3><p>BYU-Idaho security no longer has your location</p></div></div>'+
+      '<div class="card-foot"><button class="btn primary" type="button" data-action="go-intro">End SafeWalk</button></div>',
+    reported: () => head()+'<div class="card-body"><div class="center">'+CHECK+
+      '<h3>Emergency Reported</h3><p>Emergency Services have your location and are on their way.</p></div></div>'+
+      '<div class="card-foot"><button class="btn primary" type="button" data-action="after-report">Ok</button></div>'
+  };
+  function sessionView(foot){
+    return head()+'<div class="card-body mbody"><div class="mapwrap"><div class="mapstage">'+
+      '<div id="mapslot"></div>'+
+      '<button class="callbar" type="button" data-action="call911">Call 911</button>'+
+      (S.step==='walking'?'<button class="chip" type="button" id="simchip" data-action="toggle-sim"></button>':'')+
+      '<div class="tip" id="tip"></div></div></div></div>'+
+      '<div class="card-foot row">'+foot+'</div>';
+  }
+
+  function refreshDestUI(){
+    const line=$('destline'), btn=$('confirmBtn');
+    if(line){
+      if(S.mapErr) line.innerHTML='<span class="sub">The map isn’t available yet.</span>';
+      else if(S.dest) line.innerHTML='<b>'+esc(S.dest.name)+'</b><br><span class="sub">'+routeText()+'</span>';
+      else line.innerHTML='<span class="sub">Search above, or tap a building or anywhere on the map to drop a pin.'+(S.gps==='off'?' Location is off, so your start point is the center of campus.':'')+'</span>';
+    }
+    if(btn) btn.disabled = !S.dest;
+  }
+
+  function render(){
+    $('card').innerHTML = views[S.step]();
+    const slot=$('mapslot'); if(slot) slot.appendChild(mapHost);
+    if(S.step==='map'){
+      refreshDestUI();
+      const q=$('q');
+      q.addEventListener('input', ()=>{
+        clearTimeout(searchT);
+        const v=q.value.trim();
+        if(v.length<3){ $('results').hidden=true; return; }
+        searchT=setTimeout(()=>searchPlaces(v), 400);
+      });
+      q.addEventListener('keydown', e=>{ if(e.key==='Enter'){ clearTimeout(searchT); const v=q.value.trim(); if(v) searchPlaces(v); }});
+    }
+    if(S.step==='ready'){ S.tip='ask'; drawTip(); fitRoute(); }
+    if(S.step==='walking'){ drawTip(); updateChip(); }
+  }
+
+  // ---------- toast ----------
+  let toastT;
+  function toast(msg){
+    $('toastText').textContent=msg; const t=$('toast');
+    t.classList.add('show'); clearTimeout(toastT);
+    toastT=setTimeout(()=>t.classList.remove('show'), 4500);
+  }
+
+  // ---------- dialer & fake call ----------
+  function show(id){
+    ['home','dialer','call'].forEach(s=>{ $(s).hidden=(s!==id); });
+    $('sb').classList.toggle('dark', id==='call');
+  }
+  let digits='911';
+  const KEYS=[['1',''],['2','ABC'],['3','DEF'],['4','GHI'],['5','JKL'],['6','MNO'],['7','PQRS'],['8','TUV'],['9','WXYZ'],['*',''],['0','+'],['#','']];
+  $('pad').innerHTML=KEYS.map(k=>'<button class="key" type="button" data-key="'+k[0]+'"><span class="n">'+k[0]+'</span><span class="l">'+k[1]+'</span></button>').join('');
+  function drawDial(){ $('dnum').textContent=digits; $('delbtn').style.visibility=digits?'visible':'hidden'; }
+  let callT=null;
+  function startCall(){
+    show('call'); $('cstat').textContent='calling mobile…';
+    document.querySelectorAll('.cbtn.on').forEach(b=>b.classList.remove('on'));
+    clearInterval(callT); const t0=Date.now();
+    callT=setInterval(()=>{
+      const s=(Date.now()-t0)/1000; if(s<3) return;
+      const c=Math.floor(s-3);
+      $('cstat').textContent=String(Math.floor(c/60)).padStart(2,'0')+':'+String(c%60).padStart(2,'0');
+    },250);
+  }
+
+  // ---------- actions ----------
+  function act(a, el){
+    switch(a){
+      case 'start':
+      case 'request': {
+        const pi=$('phoneInput');
+        S.phone = (pi && pi.value.trim()) || '208-555-0142';
+        try{ localStorage.setItem('sw_phone', S.phone); }catch(e){}
+        S.step = a==='start' ? 'map' : 'request'; break;
+      }
+      case 'go-intro': S.step='intro'; S.active=false; S.tip=null; clearDest(); break;
+      case 'pick': {
+        const p=lastResults[+el.getAttribute('data-i')]; if(!p) return;
+        $('results').hidden=true; $('q').value=p.displayName;
+        setDest(p.displayName, p.location.lat(), p.location.lng());
+        if(map) map.panTo(p.location);
+        return;
+      }
+      case 'confirm-dest': if(!S.dest) return; S.step='ready'; break;
+      case 'back-map': S.step='map'; S.tip=null; break;
+      case 'begin':
+        S.step='walking'; S.active=true; S.simT=0; S.simP=0; S.fired={}; S.tip=null; S.arrived=false;
+        S.lastMovePos=null; S.lastMoveAt=Date.now(); S.stopWarned=false;
+        if(S.gps!=='on') S.sim=true;
+        computeRoute();
+        break;
+      case 'toggle-sim':
+        if(S.gps!=='on') return;
+        S.sim=!S.sim; S.simP=0;
+        if(S.sim) computeRoute();
+        updateChip(); return;
+      case 'arrived': S.step='ended'; S.active=false; S.tip=null; toast('Your SafeWalk has ended. Glad you made it safely.'); break;
+      case 'cancel-session': S.step='map'; S.active=false; S.tip=null; break;
+      case 'call911': digits='911'; drawDial(); show('dialer'); return;
+      case 'del': digits=digits.slice(0,-1); drawDial(); return;
+      case 'dialer-home': show('home'); return;
+      case 'place-call': if(!digits) return; startCall(); return;
+      case 'toggle': el.classList.toggle('on'); return;
+      case 'end-call': clearInterval(callT); show('home'); S.prev=S.step; S.step='reported'; break;
+      case 'after-report': S.step = S.active ? 'walking' : (S.prev && S.prev!=='reported' ? S.prev : 'intro'); break;
+    }
+    render();
+  }
+
+  document.addEventListener('click', e=>{
+    const k=e.target.closest('[data-key]');
+    if(k){ if(digits.length<15){ digits+=k.getAttribute('data-key'); drawDial(); } return; }
+    const b=e.target.closest('[data-action]');
+    if(b && !b.disabled) act(b.getAttribute('data-action'), b);
+  });
+
+  function clock(){ const d=new Date(), h=d.getHours()%12||12; $('clock').textContent=h+':'+String(d.getMinutes()).padStart(2,'0'); }
+  clock(); setInterval(clock,15000);
+
+  drawDial(); render(); loadMaps(); startGPS();
+})();
+</script>
+</body>
+</html>
