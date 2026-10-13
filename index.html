@@ -240,7 +240,7 @@ ol{margin:0;padding-left:18px;font-size:12px;color:var(--muted);line-height:1.55
    PASTE YOUR GOOGLE MAPS KEY BETWEEN THE QUOTES BELOW
    (a Maps Demo Key works)
    ========================================================= */
-const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
+const MAPS_KEY = 'PASTE_KEY_HERE';
 
 (function(){
   const CAMPUS = {lat:43.8187, lng:-111.7837};   // BYU-Idaho, Rexburg
@@ -257,6 +257,7 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
   // ---------- the live map (one instance, moved between screens) ----------
   const mapHost = document.createElement('div'); mapHost.id = 'mapHost';
   let lastDrag=0;
+  let meHalo=null;
   let G=null, map=null, meMarker=null, destMarker=null, routeLine=null, routeToken=0;
 
   function mapError(msg){
@@ -287,8 +288,9 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
       G = {Map, Polyline, AdvancedMarkerElement, PinElement, Place};
       map = new Map(mapHost, { center:S.me, zoom:17, mapId:'DEMO_MAP_ID', disableDefaultUI:true,
                                zoomControl:true, gestureHandling:'greedy', clickableIcons:true });
-      const dot = document.createElement('div'); dot.className='medot';
-      meMarker = new AdvancedMarkerElement({ map, position:S.me, content:dot, zIndex:10, title:'You' });
+      meHalo = new google.maps.Circle({ map, center:S.me, radius:18, strokeOpacity:0, fillColor:'#3b8cff', fillOpacity:.22, clickable:false, zIndex:9 });
+      meMarker = new google.maps.Marker({ map, position:S.me, zIndex:1000, title:'You are here', clickable:false,
+        icon:{ path:google.maps.SymbolPath.CIRCLE, scale:8, fillColor:'#1f6fe0', fillOpacity:1, strokeColor:'#ffffff', strokeWeight:3 } });
       map.addListener('click', onMapClick);
       map.addListener('dragstart', () => { lastDrag = Date.now(); });
       refreshDestUI();
@@ -311,7 +313,8 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
 
   function setMe(pos){
     S.me = pos;
-    if(meMarker) meMarker.position = pos;
+    if(meMarker) meMarker.setPosition(pos);
+    if(meHalo) meHalo.setCenter(pos);
     if(!S.active) return;
     if(map && S.step==='walking' && Date.now()-lastDrag > 10000) map.panTo(pos);
     if(!S.lastMovePos || dist(pos, S.lastMovePos) > 10){ S.lastMovePos = pos; S.lastMoveAt = Date.now(); S.stopWarned=false; }
