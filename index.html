@@ -97,7 +97,9 @@ ol{margin:0;padding-left:18px;font-size:12px;color:var(--muted);line-height:1.55
 .results button span{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .results button:hover{background:#eef3fa}
 .results .msg{padding:10px;font-size:12px;color:var(--muted)}
-.mapstage{position:relative;flex:1;min-height:0;background:#dfe6ee}
+.mapstage{position:relative;flex:1;min-height:0;background:#1d2330}
+.maperr{color:#d7dce4!important}
+.maperr code{background:#2c3444!important}
 #mapslot{position:absolute;inset:0}
 #mapHost{width:100%;height:100%}
 .maperr{height:100%;display:grid;place-items:center;text-align:center;padding:20px;font-size:12.5px;color:#3a3f46;line-height:1.5}
@@ -267,7 +269,7 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
   }
 
   function loadMaps(){
-    if(!MAPS_KEY || MAPS_KEY === 'PASTE_KEY_HERE'){
+    if(!MAPS_KEY || MAPS_KEY === 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ'){
       mapError('Add your Google Maps key: open this file and paste it into <code>MAPS_KEY</code> at the top of the script.');
       return;
     }
@@ -286,7 +288,7 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
       const {AdvancedMarkerElement, PinElement} = await google.maps.importLibrary('marker');
       const {Place} = await google.maps.importLibrary('places');
       G = {Map, Polyline, AdvancedMarkerElement, PinElement, Place};
-      map = new Map(mapHost, { center:S.me, zoom:17, mapId:'DEMO_MAP_ID', disableDefaultUI:true,
+      map = new Map(mapHost, { center:S.me, zoom:17, mapId:'DEMO_MAP_ID', colorScheme:'DARK', backgroundColor:'#1d2330', disableDefaultUI:true,
                                zoomControl:true, gestureHandling:'greedy', clickableIcons:true });
       meHalo = new google.maps.Circle({ map, center:S.me, radius:18, strokeOpacity:0, fillColor:'#3b8cff', fillOpacity:.22, clickable:false, zIndex:9 });
       meMarker = new google.maps.Marker({ map, position:S.me, zIndex:1000, title:'You are here', clickable:false,
@@ -446,26 +448,6 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
     return d+' · about '+min+' min walk'+(S.route.straight?' (straight line)':'');
   }
 
-  // ---------- search ----------
-  let searchT=null, lastResults=[];
-  async function searchPlaces(q){
-    const box = $('results'); if(!box) return;
-    if(!G){ box.hidden=false; box.innerHTML='<div class="msg">The map is still loading.</div>'; return; }
-    box.hidden=false; box.innerHTML='<div class="msg">Searching…</div>';
-    try{
-      const {places} = await G.Place.searchByText({
-        textQuery:q, fields:['displayName','location','formattedAddress'],
-        locationBias:{center:CAMPUS, radius:3000}, maxResultCount:5
-      });
-      lastResults = places || [];
-      if($('q') && $('q').value.trim() !== q) return;
-      box.innerHTML = lastResults.length
-        ? lastResults.map((p,i)=>'<button type="button" data-action="pick" data-i="'+i+'">'+esc(p.displayName)+'<span>'+esc(p.formattedAddress||'')+'</span></button>').join('')
-        : '<div class="msg">No places found. Try a building name, or tap the map.</div>';
-    }catch(e){
-      box.innerHTML='<div class="msg">Search is unavailable right now. Tap the map to drop a pin instead.</div>';
-    }
-  }
 
   // ---------- tips & timeline ----------
   const ICONS={
@@ -543,7 +525,6 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
       '<div class="card-foot"><button class="btn primary" type="button" data-action="go-intro">Ok</button></div>',
     map: () => head()+'<div class="card-body mbody"><div class="mapwrap">'+
       '<div class="mapbar">Please Select Your Destination</div>'+
-      '<div class="searchrow"><input class="search" id="q" type="search" autocomplete="off" placeholder="Search a building, like Manwaring Center"><div class="results" id="results" hidden></div></div>'+
       '<div class="mapstage"><div id="mapslot"></div></div>'+
       '<div class="dest" id="destline"></div></div></div>'+
       '<div class="card-foot"><button class="btn primary" type="button" id="confirmBtn" data-action="confirm-dest" disabled>Confirm Destination</button></div>',
@@ -574,7 +555,7 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
     if(line){
       if(S.mapErr) line.innerHTML='<span class="sub">The map isn’t available yet.</span>';
       else if(S.dest) line.innerHTML='<b>'+esc(S.dest.name)+'</b><br><span class="sub">'+routeText()+'</span>';
-      else line.innerHTML='<span class="sub">Search above, or tap a building or anywhere on the map to drop a pin.'+(S.gps==='off'?' Location is off, so your start point is the center of campus.':'')+'</span>';
+      else line.innerHTML='<span class="sub">Tap a building or anywhere on the map to drop a pin.'+(S.gps==='off'?' Location is off, so your start point is the center of campus.':'')+'</span>';
     }
     if(btn) btn.disabled = !S.dest;
   }
@@ -584,14 +565,6 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
     const slot=$('mapslot'); if(slot) slot.appendChild(mapHost);
     if(S.step==='map'){
       refreshDestUI();
-      const q=$('q');
-      q.addEventListener('input', ()=>{
-        clearTimeout(searchT);
-        const v=q.value.trim();
-        if(v.length<3){ $('results').hidden=true; return; }
-        searchT=setTimeout(()=>searchPlaces(v), 400);
-      });
-      q.addEventListener('keydown', e=>{ if(e.key==='Enter'){ clearTimeout(searchT); const v=q.value.trim(); if(v) searchPlaces(v); }});
     }
     if(S.step==='ready'){ S.tip='ask'; drawTip(); fitRoute(); }
     if(S.step==='walking'){ drawTip(); updateChip(); }
@@ -637,13 +610,6 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
         S.step = a==='start' ? 'map' : 'request'; break;
       }
       case 'go-intro': S.step='intro'; S.active=false; S.tip=null; clearDest(); break;
-      case 'pick': {
-        const p=lastResults[+el.getAttribute('data-i')]; if(!p) return;
-        $('results').hidden=true; $('q').value=p.displayName;
-        setDest(p.displayName, p.location.lat(), p.location.lng());
-        if(map) map.panTo(p.location);
-        return;
-      }
       case 'confirm-dest': if(!S.dest) return; S.step='ready'; break;
       case 'back-map': S.step='map'; S.tip=null; break;
       case 'begin':
