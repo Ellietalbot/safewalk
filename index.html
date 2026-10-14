@@ -121,7 +121,7 @@ ol{margin:0;padding-left:18px;font-size:12px;color:var(--muted);line-height:1.55
 @keyframes ring{70%{box-shadow:0 0 0 14px rgba(59,140,255,0),0 1px 4px rgba(0,0,0,.4)}100%{box-shadow:0 0 0 0 rgba(59,140,255,0),0 1px 4px rgba(0,0,0,.4)}}
 
 /* Toast */
-.toast{position:absolute;top:48px;left:10px;right:10px;background:rgba(245,245,247,.97);border-radius:16px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.2);display:flex;gap:10px;z-index:40;transform:translateY(-160%);transition:transform .35s ease}
+.toast{position:absolute;top:48px;left:10px;right:10px;background:rgba(245,245,247,.97);border-radius:16px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.2);display:flex;gap:10px;z-index:40;transform:translateY(calc(-100% - 70px));transition:transform .35s ease}
 @media (max-width:480px){.toast{top:calc(env(safe-area-inset-top,0px) + 8px)}}
 .toast.show{transform:none}
 .toast .appi{flex:none;width:34px;height:34px;border-radius:8px;background:#30c94e;display:grid;place-items:center}
@@ -388,7 +388,7 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
     if(destMarker) destMarker.map=null;
     if(routeLine) routeLine.setMap(null);
   }
-xw
+
   async function computeRoute(){
     if(!S.dest) return;
     const tok = ++routeToken, o = {...S.me}, d = {lat:S.dest.lat, lng:S.dest.lng};
