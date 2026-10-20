@@ -132,6 +132,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
 .chip.on{background:var(--blue);color:#fff}
 .tip{position:absolute;left:10px;right:10px;bottom:10px;z-index:4;background:rgba(10,95,180,.96);color:#fff;border-radius:8px;padding:11px 12px;display:flex;gap:12px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.35);transform:translateY(130%);opacity:0;transition:transform .35s ease,opacity .35s ease;pointer-events:none}
 .tip.show{transform:none;opacity:1}
+.tip{display:none!important}
 .tipi{flex:none;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center}
 .tipi svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tipt{min-width:0;font-size:12px;line-height:1.4}
@@ -257,7 +258,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
 
 </div>
 </div>
-<div class="note">Prototype. The map and your location are real; texts and 911 calls are simulated.</div>
+<div class="note">Prototype · Version 6. The map and your location are real; 911 calls are simulated.</div>
 
 <script>
 /* =========================================================
@@ -563,7 +564,7 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
     {img:'checkin',   t:'Security Will Check In If You Stop Walking', p:'Campus Security will call to check in when you stop for 5 minutes or more.'},
     {img:'confident', t:'Walk Confidently', p:'Know that SafeWalk keeps running while you walk, even when your phone is locked.'}
   ];
-  const head = () => '<div class="card-head"><h2>SafeWalk</h2><span class="dots3" aria-hidden="true">···</span></div>';
+  const head = () => '<div class="card-head"><h2>SafeWalk</h2><span class="dots3" title="Version 6">v6 ···</span></div>';
   const CHECK = '<svg class="bigcheck" viewBox="0 0 84 84"><circle cx="42" cy="42" r="38"/><path class="tick" d="m26 43 11 11 22-24"/></svg>';
   const PHONE_ICON = '<svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18h2"/></svg>';
   const SEARCH_ICON = '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg>';
