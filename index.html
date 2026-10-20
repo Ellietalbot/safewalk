@@ -258,7 +258,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
 
 </div>
 </div>
-<div class="note">Prototype · Version 6. The map and your location are real; 911 calls are simulated.</div>
+<div class="note">Prototype · Version 7. The map and your location are real; 911 calls are simulated.</div>
 
 <script>
 /* =========================================================
@@ -564,7 +564,7 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
     {img:'checkin',   t:'Security Will Check In If You Stop Walking', p:'Campus Security will call to check in when you stop for 5 minutes or more.'},
     {img:'confident', t:'Walk Confidently', p:'Know that SafeWalk keeps running while you walk, even when your phone is locked.'}
   ];
-  const head = () => '<div class="card-head"><h2>SafeWalk</h2><span class="dots3" title="Version 6">v6 ···</span></div>';
+  const head = () => '<div class="card-head"><h2>SafeWalk</h2><span class="dots3" title="Version 7">v7 ···</span></div>';
   const CHECK = '<svg class="bigcheck" viewBox="0 0 84 84"><circle cx="42" cy="42" r="38"/><path class="tick" d="m26 43 11 11 22-24"/></svg>';
   const PHONE_ICON = '<svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18h2"/></svg>';
   const SEARCH_ICON = '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg>';
@@ -611,7 +611,7 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
 
     ended: () => head()+'<div class="card-body"><div class="center">'+CHECK+
       '<h3>SafeWalk Ended</h3><p>BYU-Idaho security no longer has your location</p></div></div>'+
-      '<div class="card-foot"><button class="btn primary" type="button" data-action="go-intro">End SafeWalk</button></div>',
+      '<div class="card-foot"><button class="btn outline" type="button" data-action="go-intro">Start Over</button></div>',
 
     reported: () => head()+'<div class="card-body"><div class="center">'+CHECK+
       '<h3>Emergency Reported</h3><p>Emergency Services have your location and are on their way.</p></div></div>'+
