@@ -83,6 +83,18 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
 .art img{max-width:72%;max-height:min(150px,100%);object-fit:contain;display:block}
 .copy{text-align:center;padding:4px 4px 0}
 .copy h3{margin:0 0 6px;color:var(--blue-ink);font-size:18px;line-height:26px;font-weight:700;text-wrap:balance}
+.copy h3:only-child{margin:0}
+.slide .copy{padding:6px 10px 0}
+.card-body.active{align-items:center;justify-content:center;text-align:center;gap:0;padding-top:0}
+.livehead{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;color:var(--ink)}
+.livedot{width:10px;height:10px;border-radius:50%;background:#22b14c;box-shadow:0 0 0 0 rgba(34,177,76,.5);animation:live 1.8s infinite}
+@keyframes live{70%{box-shadow:0 0 0 7px rgba(34,177,76,0)}100%{box-shadow:0 0 0 0 rgba(34,177,76,0)}}
+.livesub{margin:4px 0 18px;font-size:14px;line-height:16px;color:var(--subtext)}
+.sos{width:150px;height:150px;border-radius:50%;border:0;background:var(--red);color:#fff;font-size:24px;font-weight:700;box-shadow:0 0 0 9px #f9c9cc,0 8px 20px rgba(232,16,28,.3);flex:none}
+.sos:active{background:var(--red-press);transform:scale(.98)}
+.or{margin:22px 0 12px;font-size:12px;color:var(--subtext);letter-spacing:.06em}
+.secbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px}
+.secbtn svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
 .copy p{margin:0;font-size:14px;line-height:16px;color:var(--subtext);text-wrap:balance}
 
 /* Carousel */
@@ -242,7 +254,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
   </section>
 
   <section class="screen call" id="call" hidden>
-    <div class="cnum">911</div>
+    <div class="cnum" id="cnum">911</div>
     <div class="cstat" id="cstat">calling mobile…</div>
     <div class="cgrid">
       <button class="cbtn" type="button" data-action="toggle"><span class="c"><svg viewBox="0 0 30 30"><rect x="11" y="4" width="8" height="14" rx="4"/><path d="M7 14a8 8 0 0 0 16 0M15 22v4M5 4l20 22"/></svg></span>mute</button>
@@ -258,7 +270,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
 
 </div>
 </div>
-<div class="note">Prototype · Version 7. The map and your location are real; 911 calls are simulated.</div>
+<div class="note">Prototype · Version 8. The map and your location are real; 911 calls are simulated.</div>
 
 <script>
 /* =========================================================
@@ -560,32 +572,32 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
 
   // ---------- views ----------
   const SLIDES = [
-    {img:'monitor',   t:'Campus Security Will Monitor Your Walk', p:'Your location and phone number will temporarily be used to keep you safe.'},
-    {img:'checkin',   t:'Security Will Check In If You Stop Walking', p:'Campus Security will call to check in when you stop for 5 minutes or more.'},
-    {img:'confident', t:'Walk Confidently', p:'Know that SafeWalk keeps running while you walk, even when your phone is locked.'}
+    {img:'monitor',   t:'Campus Security will use your location and phone number to keep you safe'},
+    {img:'checkin',   t:'Campus Security will call to check-in when you stop for 5 minutes or more'},
+    {img:'confident', t:'Know that SafeWalk is running while you walk, even when your phone is locked'}
   ];
-  const head = () => '<div class="card-head"><h2>SafeWalk</h2><span class="dots3" title="Version 7">v7 ···</span></div>';
+  const head = () => '<div class="card-head"><h2>Safewalk</h2><span class="dots3" title="Version 8">v8 ···</span></div>';
   const CHECK = '<svg class="bigcheck" viewBox="0 0 84 84"><circle cx="42" cy="42" r="38"/><path class="tick" d="m26 43 11 11 22-24"/></svg>';
   const PHONE_ICON = '<svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18h2"/></svg>';
+  const WARN_ICON = '<svg viewBox="0 0 24 24"><path d="M12 3.5 2.5 20h19L12 3.5z"/><path d="M12 10v4.5M12 17.2v.3"/></svg>';
   const SEARCH_ICON = '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg>';
 
   const views = {
     intro: () => head()+'<div class="card-body"><div class="carousel">'+
       '<div class="track" id="track" tabindex="0" aria-label="About SafeWalk, swipe for more">'+
       SLIDES.map(s=>'<div class="slide"><div class="art"><img src="'+IMG[s.img]+'" alt="" draggable="false"></div>'+
-        '<div class="copy"><h3>'+s.t+'</h3><p>'+s.p+'</p></div></div>').join('')+
+        '<div class="copy"><h3>'+s.t+'</h3></div></div>').join('')+
       '</div>'+
       '<button class="navbtn prev" type="button" id="prevBtn" data-action="prev" aria-label="Previous"><svg viewBox="0 0 16 16"><path d="M10 3 5 8l5 5"/></svg></button>'+
       '<button class="navbtn next" type="button" id="nextBtn" data-action="next" aria-label="Next"><svg viewBox="0 0 16 16"><path d="m6 3 5 5-5 5"/></svg></button>'+
       '<div class="pager" id="pager">'+
       SLIDES.map((s,i)=>'<button type="button" data-action="slide" data-i="'+i+'" aria-label="Slide '+(i+1)+'"></button>').join('')+
       '</div></div></div>'+
-      '<div class="card-foot"><button class="btn primary" type="button" data-action="start">Get Started</button></div>',
+      '<div class="card-foot"><button class="btn primary" type="button" id="introBtn" data-action="start">'+(S.slide===SLIDES.length-1?'Get Started':'Next')+'</button></div>',
 
     phone: () => head()+'<div class="card-body">'+
       '<div class="art"><img src="'+IMG.phone+'" alt=""></div>'+
-      '<div class="copy"><h3>Confirm Your Phone Number</h3>'+
-      '<p>This number will be used by BYU-I Security to contact you in case of emergency.</p></div>'+
+      '<div class="copy"><h3>Confirm your phone number is correct</h3></div>'+
       '<label class="phonefield" for="phoneInput">'+PHONE_ICON+
       '<input id="phoneInput" type="tel" inputmode="tel" autocomplete="tel" placeholder="123-456-7890" value="'+esc(S.phone)+'"></label>'+
       '</div><div class="card-foot"><button class="btn primary" type="button" data-action="confirm-phone">This Number Is Correct</button></div>',
@@ -600,14 +612,14 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
       '<div class="card-foot"><button class="btn outline" type="button" data-action="cancel-map">Cancel</button>'+
       '<button class="btn primary" type="button" id="beginBtn" data-action="begin" disabled>Begin SafeWalk</button></div>',
 
-    walking: () => head()+'<div class="card-body mbody"><div class="mapwrap">'+
-      '<div class="mapbar">SafeWalk Active: <span>Campus Security has your location</span></div>'+
-      '<div class="mapstage"><div id="mapslot"></div>'+
-      '<button class="callbar" type="button" data-action="call911">Call 911</button>'+
-      '<button class="chip" type="button" id="simchip" data-action="toggle-sim"></button>'+
-      '</div></div></div>'+
-      '<div class="card-foot"><button class="btn outline" type="button" data-action="cancel-session">Cancel</button>'+
-      '<button class="btn go'+(S.arrived?' glow':'')+'" type="button" id="arrivedBtn" data-action="arrived">I’ve Arrived Safely</button></div>',
+    walking: () => head()+'<div class="card-body active">'+
+      '<div class="livehead"><span class="livedot" aria-hidden="true"></span>SafeWalk Active</div>'+
+      '<p class="livesub">Campus Security has your Location</p>'+
+      '<button class="sos" type="button" data-action="call911">Call 911</button>'+
+      '<div class="or">OR</div>'+
+      '<button class="btn outline secbtn" type="button" data-action="call-security">'+WARN_ICON+'Call Campus Security</button>'+
+      '</div>'+
+      '<div class="card-foot"><button class="btn go'+(S.arrived?' glow':'')+'" type="button" id="arrivedBtn" data-action="arrived">I’ve Arrived Safely</button></div>',
 
     ended: () => head()+'<div class="card-body"><div class="center">'+CHECK+
       '<h3>SafeWalk Ended</h3><p>BYU-Idaho security no longer has your location</p></div></div>'+
@@ -633,7 +645,7 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
   function setupCarousel(){
     const track=$('track'); if(!track) return;
     const dots=[...$('pager').children];
-    const mark=()=>{ dots.forEach((d,i)=>d.classList.toggle('on', i===S.slide)); $('prevBtn').disabled=S.slide===0; $('nextBtn').disabled=S.slide===SLIDES.length-1; };
+    const mark=()=>{ dots.forEach((d,i)=>d.classList.toggle('on', i===S.slide)); $('prevBtn').disabled=S.slide===0; $('nextBtn').disabled=S.slide===SLIDES.length-1; const ib=$('introBtn'); if(ib) ib.textContent = S.slide===SLIDES.length-1 ? 'Get Started' : 'Next'; };
     const go=(i,smooth)=>{ S.slide=Math.max(0,Math.min(SLIDES.length-1,i)); track.scrollTo({left:S.slide*track.clientWidth, behavior:smooth?'smooth':'auto'}); mark(); };
     requestAnimationFrame(()=>go(S.slide,false));
     track.addEventListener('scroll', ()=>{ const i=Math.round(track.scrollLeft/track.clientWidth); if(i!==S.slide){ S.slide=i; mark(); } }, {passive:true});
@@ -665,7 +677,7 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
       });
       q.addEventListener('keydown', e=>{ if(e.key==='Enter'){ clearTimeout(searchT); const v=q.value.trim(); if(v) searchPlaces(v); q.blur(); }});
     }
-    if(S.step==='walking'){ drawTip(); updateChip(); }
+
   }
 
   // ---------- toast ----------
@@ -686,7 +698,10 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
   $('pad').innerHTML=KEYS.map(k=>'<button class="key" type="button" data-key="'+k[0]+'"><span class="n">'+k[0]+'</span><span class="l">'+k[1]+'</span></button>').join('');
   function drawDial(){ $('dnum').textContent=digits; $('delbtn').style.visibility=digits?'visible':'hidden'; }
   let callT=null;
-  function startCall(){
+  let callWho='911';
+  function startCall(who){
+    callWho = who || '911';
+    $('cnum').textContent = callWho;
     show('call'); $('cstat').textContent='calling mobile…';
     document.querySelectorAll('.cbtn.on').forEach(b=>b.classList.remove('on'));
     clearInterval(callT); const t0=Date.now();
@@ -703,7 +718,9 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
       case 'slide': if(setupCarousel.go) setupCarousel.go(+el.getAttribute('data-i'), true); return;
       case 'prev': if(setupCarousel.go) setupCarousel.go(S.slide-1, true); return;
       case 'next': if(setupCarousel.go) setupCarousel.go(S.slide+1, true); return;
-      case 'start': S.step='phone'; break;
+      case 'start':
+        if(S.slide < SLIDES.length-1){ if(setupCarousel.go) setupCarousel.go(S.slide+1, true); return; }
+        S.step='phone'; break;
       case 'confirm-phone': {
         const pi=$('phoneInput');
         S.phone = (pi && pi.value.trim()) || '208-555-0142';
@@ -735,9 +752,13 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
       case 'call911': digits='911'; drawDial(); show('dialer'); return;
       case 'del': digits=digits.slice(0,-1); drawDial(); return;
       case 'dialer-home': show('home'); return;
-      case 'place-call': if(!digits) return; startCall(); return;
+      case 'place-call': if(!digits) return; startCall(digits); return;
+      case 'call-security': startCall('Campus Security'); return;
       case 'toggle': el.classList.toggle('on'); return;
-      case 'end-call': clearInterval(callT); show('home'); S.prev=S.step; S.step='reported'; break;
+      case 'end-call':
+        clearInterval(callT); show('home');
+        if(callWho==='Campus Security') return;
+        S.prev=S.step; S.step='reported'; break;
       case 'after-report': S.step = S.active ? 'walking' : (S.prev && S.prev!=='reported' ? S.prev : 'intro'); break;
     }
     render();
