@@ -84,7 +84,10 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
 .copy{text-align:center;padding:4px 4px 0}
 .copy h3{margin:0 0 6px;color:var(--blue-ink);font-size:18px;line-height:26px;font-weight:700;text-wrap:balance}
 .copy h3:only-child{margin:0}
-.slide .copy{padding:6px 10px 0}
+.slide .copy{padding:6px 0 0}
+.slide .copy h3{font-size:16px;line-height:22px;text-wrap:pretty}
+@media (max-width:380px){.slide .copy h3{font-size:14.5px;line-height:20px}.slide{padding:0 12px}}
+.phonecopy p{text-wrap:pretty}
 .card-body.active{align-items:center;justify-content:center;text-align:center;gap:0;padding-top:0}
 .livehead{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;color:var(--ink)}
 .livedot{width:10px;height:10px;border-radius:50%;background:#22b14c;box-shadow:0 0 0 0 rgba(34,177,76,.5);animation:live 1.8s infinite}
@@ -270,7 +273,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
 
 </div>
 </div>
-<div class="note">Prototype · Version 12. The map and your location are real; 911 calls are simulated.</div>
+<div class="note">Prototype · Version 13. The map and your location are real; 911 calls are simulated.</div>
 
 <script>
 /* =========================================================
@@ -576,7 +579,7 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
     {img:'checkin',   t:'If you stop for 3 minutes or more, campus security will call to check on you.'},
     {img:'confident', t:'SafeWalk is running while you walk, even when your phone is locked'}
   ];
-  const head = () => '<div class="card-head"><h2>Safewalk</h2><span class="dots3" title="Version 12">v12 ···</span></div>';
+  const head = () => '<div class="card-head"><h2>Safewalk</h2><span class="dots3" title="Version 13">v13 ···</span></div>';
   const CHECK = '<svg class="bigcheck" viewBox="0 0 84 84"><circle cx="42" cy="42" r="38"/><path class="tick" d="m26 43 11 11 22-24"/></svg>';
   const PHONE_ICON = '<svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18h2"/></svg>';
   const WARN_ICON = '<svg viewBox="0 0 24 24"><path d="M12 3.5 2.5 20h19L12 3.5z"/><path d="M12 10v4.5M12 17.2v.3"/></svg>';
