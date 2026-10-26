@@ -270,7 +270,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
 
 </div>
 </div>
-<div class="note">Prototype · Version 9. The map and your location are real; 911 calls are simulated.</div>
+<div class="note">Prototype · Version 10. The map and your location are real; 911 calls are simulated.</div>
 
 <script>
 /* =========================================================
@@ -576,7 +576,7 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
     {img:'checkin',   t:'Campus Security will call to check-in when you stop for 5 minutes or more'},
     {img:'confident', t:'Know that SafeWalk is running while you walk, even when your phone is locked'}
   ];
-  const head = () => '<div class="card-head"><h2>Safewalk</h2><span class="dots3" title="Version 9">v9 ···</span></div>';
+  const head = () => '<div class="card-head"><h2>Safewalk</h2><span class="dots3" title="Version 10">v10 ···</span></div>';
   const CHECK = '<svg class="bigcheck" viewBox="0 0 84 84"><circle cx="42" cy="42" r="38"/><path class="tick" d="m26 43 11 11 22-24"/></svg>';
   const PHONE_ICON = '<svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18h2"/></svg>';
   const WARN_ICON = '<svg viewBox="0 0 24 24"><path d="M12 3.5 2.5 20h19L12 3.5z"/><path d="M12 10v4.5M12 17.2v.3"/></svg>';
@@ -588,8 +588,6 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
       SLIDES.map(s=>'<div class="slide"><div class="art"><img src="'+IMG[s.img]+'" alt="" draggable="false"></div>'+
         '<div class="copy"><h3>'+s.t+'</h3></div></div>').join('')+
       '</div>'+
-      '<button class="navbtn prev" type="button" id="prevBtn" data-action="prev" aria-label="Previous"><svg viewBox="0 0 16 16"><path d="M10 3 5 8l5 5"/></svg></button>'+
-      '<button class="navbtn next" type="button" id="nextBtn" data-action="next" aria-label="Next"><svg viewBox="0 0 16 16"><path d="m6 3 5 5-5 5"/></svg></button>'+
       '<div class="pager" id="pager">'+
       SLIDES.map((s,i)=>'<button type="button" data-action="slide" data-i="'+i+'" aria-label="Slide '+(i+1)+'"></button>').join('')+
       '</div></div></div>'+
@@ -645,7 +643,7 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
   function setupCarousel(){
     const track=$('track'); if(!track) return;
     const dots=[...$('pager').children];
-    const mark=()=>{ dots.forEach((d,i)=>d.classList.toggle('on', i===S.slide)); $('prevBtn').disabled=S.slide===0; $('nextBtn').disabled=S.slide===SLIDES.length-1; const ib=$('introBtn'); if(ib) ib.textContent = S.slide===SLIDES.length-1 ? 'Get Started' : 'Next'; };
+    const mark=()=>{ dots.forEach((d,i)=>d.classList.toggle('on', i===S.slide)); const ib=$('introBtn'); if(ib) ib.textContent = S.slide===SLIDES.length-1 ? 'Get Started' : 'Next'; };
     const go=(i,smooth)=>{ S.slide=Math.max(0,Math.min(SLIDES.length-1,i)); track.scrollTo({left:S.slide*track.clientWidth, behavior:smooth?'smooth':'auto'}); mark(); };
     requestAnimationFrame(()=>go(S.slide,false));
     track.addEventListener('scroll', ()=>{ const i=Math.round(track.scrollLeft/track.clientWidth); if(i!==S.slide){ S.slide=i; mark(); } }, {passive:true});
