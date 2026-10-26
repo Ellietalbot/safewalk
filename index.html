@@ -270,7 +270,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
 
 </div>
 </div>
-<div class="note">Prototype · Version 11. The map and your location are real; 911 calls are simulated.</div>
+<div class="note">Prototype · Version 12. The map and your location are real; 911 calls are simulated.</div>
 
 <script>
 /* =========================================================
@@ -288,7 +288,7 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
   };
   const CAMPUS = {lat:43.8187, lng:-111.7837};   // BYU-Idaho, Rexburg
   const ARRIVE_M = 25;          // counts as arrived within this many meters
-  const STOP_MS = 5*60*1000;    // "stopped for 5 minutes" check-in
+  const STOP_MS = 3*60*1000;    // "stopped for 3 minutes" check-in
   const $ = id => document.getElementById(id);
   const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const keyMissing = () => !MAPS_KEY || MAPS_KEY.indexOf('PASTE') === 0;
@@ -523,11 +523,11 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
   };
   const TIPS={
     notif:{i:'bell',t:'Check your notifications',s:'You’ll receive a text soon notifying you security has your location.'},
-    start:{i:'walk',t:'Start walking.',s:'If you stop for more than 5 minutes, you’ll get a call.'},
+    start:{i:'walk',t:'Start walking.',s:'If you stop for 3 minutes or more, you’ll get a call.'},
     running:{i:'phone',t:'Keep SafeWalk running',s:'You can lock your phone or use other apps.'},
     aware:{i:'eye',t:'Stay aware of your surroundings.',s:'Avoid looking down at your phone for long periods.'},
     here:{i:'pin',t:'You’ve reached your destination.',s:'Tap “I’ve Arrived Safely” to end your SafeWalk.'},
-    stopped:{i:'phone',t:'You’ve stopped for 5 minutes.',s:'Campus Security will call you to check in.'}
+    stopped:{i:'phone',t:'You’ve stopped for 3 minutes.',s:'Campus Security will call you to check in.'}
   };
   const SIM_START=6, SIM_DUR=40;
   const EVENTS=[
@@ -572,11 +572,11 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
 
   // ---------- views ----------
   const SLIDES = [
-    {img:'monitor',   t:'Campus Security will use your location and phone number to keep you safe'},
-    {img:'checkin',   t:'Campus Security will call to check-in when you stop for 5 minutes or more'},
-    {img:'confident', t:'Know that SafeWalk is running while you walk, even when your phone is locked'}
+    {img:'monitor',   t:'SafeWalk shares your location with Campus Security so they can monitor you.'},
+    {img:'checkin',   t:'If you stop for 3 minutes or more, campus security will call to check on you.'},
+    {img:'confident', t:'SafeWalk is running while you walk, even when your phone is locked'}
   ];
-  const head = () => '<div class="card-head"><h2>Safewalk</h2><span class="dots3" title="Version 11">v11 ···</span></div>';
+  const head = () => '<div class="card-head"><h2>Safewalk</h2><span class="dots3" title="Version 12">v12 ···</span></div>';
   const CHECK = '<svg class="bigcheck" viewBox="0 0 84 84"><circle cx="42" cy="42" r="38"/><path class="tick" d="m26 43 11 11 22-24"/></svg>';
   const PHONE_ICON = '<svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18h2"/></svg>';
   const WARN_ICON = '<svg viewBox="0 0 24 24"><path d="M12 3.5 2.5 20h19L12 3.5z"/><path d="M12 10v4.5M12 17.2v.3"/></svg>';
@@ -597,7 +597,7 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
 
     phone: () => head()+'<div class="card-body">'+
       '<div class="art"><img src="'+IMG.phone+'" alt=""></div>'+
-      '<div class="copy"><h3>Confirm your phone number is correct</h3></div>'+
+      '<div class="copy"><h3>Confirm your phone number is correct</h3><p>After you start your SafeWalk you’ll get a text notifying you security has your location.</p></div>'+
       '<label class="phonefield" for="phoneInput">'+PHONE_ICON+
       '<input id="phoneInput" type="tel" inputmode="tel" autocomplete="tel" placeholder="123-456-7890" value="'+esc(S.phone)+'"></label>'+
       '</div><div class="card-foot"><button class="btn primary" type="button" data-action="confirm-phone">This Number Is Correct</button></div>',
@@ -606,7 +606,7 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
       '<div class="mapbar">Select Your Destination</div>'+
       '<div class="mapstage"><div id="mapslot"></div>'+
       '<div class="searchbox"><div class="searchin">'+SEARCH_ICON+
-      '<input id="q" type="search" autocomplete="off" placeholder="Search For Location" aria-label="Search for a location"></div>'+
+      '<input id="q" type="search" autocomplete="off" placeholder="Search For Destination" aria-label="Search for a destination"></div>'+
       '<div class="results" id="results" hidden></div></div>'+
       '</div></div></div>'+
       '<div class="card-foot"><button class="btn outline" type="button" data-action="cancel-map">Cancel</button>'+
@@ -614,7 +614,7 @@ const MAPS_KEY = 'AIzaSyAw1YMcCDz9J0gErGG6ODxAdRdLE10vHEQ';
 
     walking: () => head()+'<div class="card-body active">'+
       '<div class="livehead"><span class="livedot" aria-hidden="true"></span>SafeWalk Active</div>'+
-      '<p class="livesub">Campus Security has your Location</p>'+
+      '<p class="livesub">Campus Security is monitoring your Location</p>'+
       '<button class="sos" type="button" data-action="call911">Call 911</button>'+
       '<div class="or">OR</div>'+
       '<button class="btn outline secbtn" type="button" data-action="call-security">'+WARN_ICON+'Call Campus Security</button>'+
